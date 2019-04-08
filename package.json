@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.6.1",
+    "koa": "^2.6.1",
+    "koa-body": "^4.0.8",
+    "koa-bodyparser": "^4.2.1",
+    "koa-formidable": "^1.1.0",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0",
+    "koa2-cors": "^2.0.6",
+    "mssql": "^4.2.2",
+    "request": "^2.88.0",
+    "tedious": "^3.0.1"
+  }
+}
