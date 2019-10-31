@@ -10,74 +10,47 @@ let uploadDir = './images/';
  */
 const suTuoGetWareHousingList = async (ctx, next) => {
     try {
-    const body = ctx.request.body;
-    // console.log(body);
-    let totalSql = `SELECT COUNT(R.ID) AS TOTAL FROM  RKD_MX R LEFT JOIN RKD_ZB Z ON R.ID = Z.ID  LEFT JOIN yaojiandayin Y ON R.YPBM = Y.ypbm AND R.SCPH = Y.scph LEFT JOIN BM_YP B ON R.YPBM = B.BM `;
-    let startTestSql = `SELECT * from (
-        SELECT ROW_NUMBER() OVER(ORDER BY Z.RQ desc,R.ID,Z.DWBM, R.SCPH) as px, Z.RQ, R.ID,Z.DWBM,Z.DWMC,R.YPBM,R.YPMC,R.YPGG,R.JLDW,R.SCCJ,R.PZWH,R.SCPH, Y.img FROM RKD_MX R LEFT JOIN RKD_ZB Z ON R.ID = Z.ID  LEFT JOIN yaojiandayin Y ON R.YPBM = Y.ypbm AND R.SCPH = Y.scph LEFT JOIN BM_YP B ON R.YPBM = B.BM `
-    let endTestSql = `)  as t2 where t2.px between ${(body.pageIndex - 1) * body.pageSize + 1} and ${body.pageIndex * body.pageSize}`
-    if (body.searchVal.djbh.val) {
-        startTestSql += `WHERE R.ID LIKE '%${body.searchVal.djbh.val}%'`;
-        totalSql += `WHERE R.ID LIKE '%${body.searchVal.djbh.val}%'`;
-    }
-    if (body.searchVal.spbh.val) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` R.YPBM LIKE '%${body.searchVal.spbh.val}%'`;
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` R.YPBM LIKE '%${body.searchVal.spbh.val}%'`;
-    }
-    if (body.searchVal.dwmc.val) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` Z.DWMC LIKE '%${body.searchVal.dwmc.val}%'`;
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` Z.DWMC LIKE '%${body.searchVal.dwmc.val}%'`;
-    }
-    if (body.searchVal.zjm.val) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` B.JP LIKE '%${body.searchVal.zjm.val}%'`;
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` B.JP LIKE '%${body.searchVal.zjm.val}%'`;
-    }
-    if (body.searchVal.pihao.val) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` R.SCPH LIKE '%${body.searchVal.pihao.val}%'`;
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` R.SCPH LIKE '%${body.searchVal.pihao.val}%'`;
+        const body = ctx.request.body;
+        let totalSql = `SELECT COUNT(R.ID) AS TOTAL FROM  RKD_MX R LEFT JOIN RKD_ZB Z ON R.ID = Z.ID  LEFT JOIN yaojiandayin Y ON R.YPBM = Y.ypbm 
+    AND R.SCPH = Y.scph LEFT JOIN BM_YP B ON R.YPBM = B.BM LEFT JOIN  BM_WLDW DW ON Z.DWBM = DW.BM WHERE 1=1 `;
+        let startTestSql = `SELECT * from (
+        SELECT ROW_NUMBER() OVER(ORDER BY Z.RQ desc,R.ID,Z.DWBM, R.SCPH) as px, Z.RQ, R.ID,Z.DWBM,Z.DWMC,R.YPBM,R.YPMC,R.YPGG,R.JLDW,R.SCCJ,
+        R.PZWH,R.SCPH, Y.img FROM RKD_MX R LEFT JOIN RKD_ZB Z ON R.ID = Z.ID  LEFT JOIN yaojiandayin Y ON R.YPBM = Y.ypbm AND R.SCPH = Y.scph 
+        LEFT JOIN BM_YP B ON R.YPBM = B.BM LEFT JOIN  BM_WLDW DW ON Z.DWBM = DW.BM WHERE 1=1 `
 
-    }
-    if (body.searchVal.time.val[0] !== 'Invalid date' && Boolean(body.searchVal.time.val[0])) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` Z.RQ >= '${body.searchVal.time.val[0]}' and Z.RQ <= '${body.searchVal.time.val[1]}'`;
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` Z.RQ >= '${body.searchVal.time.val[0]}' and Z.RQ <= '${body.searchVal.time.val[1]}'`;
-    }
-    console.log(body.searchVal.updateTime);
-    if (body.searchVal.updateTime.val[0] !== 'Invalid date' && Boolean(body.searchVal.updateTime.val[0])) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` Y.time >= '${body.searchVal.updateTime.val[0]} 00:00:00.000' and Y.time <= '${body.searchVal.updateTime.val[1]} 23:59:59.000'`;
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` Y.time >= '${body.searchVal.updateTime.val[0]} 00:00:00.000' and Y.time <= '${body.searchVal.updateTime.val[1]} 23:59:59.000'`;
-    }
-    if (body.searchVal.status.val === 1) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` R.YPBM = Y.ypbm AND ISNULL(datalength (Y.img),0) > 0 `
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` R.YPBM = Y.ypbm AND ISNULL(datalength (Y.img),0) > 0 `;
-    }
-    if (body.searchVal.status.val === 0) {
-        startTestSql += startTestSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        startTestSql += ` R.YPBM <>ALL(select ypbm from yaojiandayin WHERE ISNULL(datalength (img),0) > 0 ) `
-        totalSql += totalSql.indexOf('WHERE') === -1 ? 'WHERE' : 'AND';
-        totalSql += ` R.YPBM <>ALL(select ypbm from yaojiandayin WHERE ISNULL(datalength (img),0) > 0 ) `;
-    }
-
-    startTestSql += endTestSql;
-    let result = await sql.query(startTestSql);
-    let total = await sql.query(totalSql);
-    // console.log({ total: total.recordset[0].TOTAL, result: result.recordset });
-    ctx.body = { total: total.recordset[0].TOTAL, result: result.recordset };
-    } catch(err) {
-        throw err
+        let searchSqlList = [];
+        if (body.searchVal.djbh.val) {
+            searchSqlList.push(` AND R.ID LIKE '%${body.searchVal.djbh.val}%' `);
+        }
+        if (body.searchVal.spbh.val) {
+            searchSqlList.push(` AND (B.BM LIKE '%${body.searchVal.spbh.val}%' OR  B.MC LIKE '%${body.searchVal.spbh.val}%' OR B.JP LIKE '%${body.searchVal.spbh.val}%' ) `);
+        }
+        if (body.searchVal.dwmc.val) {
+            searchSqlList.push(` AND (DW.MC LIKE '%${body.searchVal.dwmc.val}%' OR DW.JP LIKE '%${body.searchVal.dwmc.val}%' ) `);
+        }
+        
+        if (body.searchVal.pihao.val) {
+            searchSqlList.push(` AND R.SCPH LIKE '%${body.searchVal.pihao.val}%'`);
+        }
+        if (body.searchVal.time.val[0] !== 'Invalid date' && Boolean(body.searchVal.time.val[0])) {
+            searchSqlList.push(` AND Z.RQ >= '${body.searchVal.time.val[0]}' and Z.RQ <= '${body.searchVal.time.val[1]}'`);
+        }
+        if (body.searchVal.updateTime.val[0] !== 'Invalid date' && Boolean(body.searchVal.updateTime.val[0])) {
+            searchSqlList.push(` AND Y.time >= '${body.searchVal.updateTime.val[0]} 00:00:00.000' and Y.time <= '${body.searchVal.updateTime.val[1]} 23:59:59.000'`);
+        }
+        if (body.searchVal.status.val === 1) {
+            searchSqlList.push(` AND R.YPBM = Y.ypbm AND ISNULL(datalength (Y.img),0) > 0 `);
+        }
+        if (body.searchVal.status.val === 0) {
+            searchSqlList.push(` AND R.YPBM <>ALL(select ypbm from yaojiandayin WHERE ISNULL(datalength (img),0) > 0 ) `);
+        }
+        totalSql += searchSqlList.join(' ')
+        startTestSql += ` ${searchSqlList.join(' ')})  as t2 where t2.px between ${(body.pageIndex - 1) * body.pageSize + 1} and ${body.pageIndex * body.pageSize}`;
+        let result = await sql.query(startTestSql);
+        let total = await sql.query(totalSql);
+        ctx.body = { total: total.recordset[0].TOTAL, result: result.recordset };
+    } catch (err) {
+        ctx.body = err
     }
 }
 
@@ -103,7 +76,7 @@ const suTuoInsertDrugPic = async (ctx, next) => {
     }
     let imgSql = `SELECT img FROM yaojiandayin WHERE ypbm = '${data.spid}' AND scph = '${data.pihao}'`;
     let imgResult = await sql.query(imgSql);
-    if ( imgResult.recordset[0] && imgResult.recordset[0].img) {
+    if (imgResult.recordset[0] && imgResult.recordset[0].img) {
         img = imgResult.recordset[0].img.split(',');
     }
 
@@ -140,9 +113,8 @@ const suTuoInsertDrugPic = async (ctx, next) => {
     } else {
         result = await sql.query(updateSql);
     }
-   
+
     let isSuccess = result.rowsAffected[0] === 0 ? false : true;
-    // console.log(isSuccess);
     ctx.body = { success: isSuccess };
 }
 
